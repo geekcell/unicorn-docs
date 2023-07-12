@@ -1,0 +1,76 @@
+---
+####################################
+## Deploy a release to Production ##
+####################################
+
+#
+# Documentation:
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+#
+name: Deploy Production Environment
+
+#####################################
+# Start the job on all push to main #
+#####################################
+on:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+###############
+# Set the Job #
+###############
+permissions:
+  contents: write
+
+jobs:
+  ##############
+  # Deployment #
+  ##############
+  deployment:
+    name: Deployment - PRO
+    runs-on: ubuntu-latest
+    steps:
+      ############################
+      # Checkout the source code #
+      ############################
+      - name: Checkout Code
+        uses: actions/checkout@v3.5.2
+
+      #################
+      # Setup Python  #
+      #################
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
+      #####################
+      # Generate Cache Id #
+      #####################
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+
+      ################
+      # Create Cache #
+      ################
+      - uses: actions/cache@v3
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+
+      ###########################
+      # Install mkdocs-material #
+      ###########################
+      - name: Install mkdocs-material
+        run: pip install mkdocs-material
+
+      ##########################
+      # Deploy to GitHub Pages #
+      ##########################
+
+      - name: Deploy to GitHub Pages
+        run: mkdocs gh-deploy --force
