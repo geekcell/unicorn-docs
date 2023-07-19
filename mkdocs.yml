@@ -1,3 +1,4 @@
 site_name: My Docs
+site_url: https://unicorn-docs.geekcell.io/
 theme:
   name: material
